@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { AnimeService } from './anime.service';
 
 @Controller('anime')
@@ -15,18 +15,28 @@ export class AnimeController {
 		return this.animeService.getAnimeById(id);
 	}
 
-	@Post()
-	async create(@Body() createAnimeDto: CreateAnimeDto) {
-		return this.animeService.createAnime(createAnimeDto);
+	@Get('pagination/:page')
+	async getAnimes(@Param('page') page: number) {
+		return this.animeService.getAnimes(page);
 	}
 
-	@Put(':id')
-	async update(@Param('id') id: number, @Body() updateAnimeDto: UpdateAnimeDto) {
-		return this.animeService.updateAnime(id, updateAnimeDto);
+	@Get('research/:research')
+	async researchAnimes(@Param('research') research: string) {
+		return this.animeService.researchAnimes(research);
 	}
 
-	@Delete(':id')
-	async delete(@Param('id') id: number) {
-		return this.animeService.deleteAnime(id);
+	@Get('count')
+	async getPageCount() {
+		return this.animeService.getCount();
+	}
+
+	@Get('latest')
+	async getLatestAnimes() {
+		return this.animeService.getLatestAnimes();
+	}
+
+	@Get('research/:research/count')
+	async getResearchPageCount(@Param('research') research: string) {
+		return this.animeService.getResearchCount(research);
 	}
 }
