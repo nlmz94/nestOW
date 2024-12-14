@@ -1,0 +1,198 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model anime {
+  id            Int            @id @default(autoincrement())
+  title         String         @db.VarChar(1024)
+  title_english String?        @db.VarChar(1024)
+  synopsis      String?        @db.Text
+  img_url       String?        @db.VarChar(1024)
+  episodes      Int?
+  pegi_id       Int?
+  airing        String?        @db.VarChar(1024)
+  aired         Int?           @db.TinyInt
+  pegi          pegi?          @relation(fields: [pegi_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "pegi_id")
+  has_genre     has_genre[]
+  has_producer  has_producer[]
+  has_studio    has_studio[]
+  islistedin    islistedin[]
+  rating        rating[]
+
+  @@index([pegi_id], map: "pegi_id_idx")
+}
+
+model article {
+  id             Int             @id @default(autoincrement())
+  title          String          @db.VarChar(512)
+  body           String          @db.Text
+  created_at     DateTime        @db.DateTime(0)
+  author_id      Int?
+  cover_id       Int?
+  category_id    Int?            @db.SmallInt
+  imagesuploaded imagesuploaded? @relation(fields: [cover_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cover_id")
+
+  @@index([cover_id], map: "cover_id_idx")
+}
+
+model article_categories {
+  id       Int     @id @default(autoincrement())
+  name     String  @db.VarChar(512)
+  bg_color String? @db.VarChar(45)
+}
+
+model authorities {
+  username  String @id @db.VarChar(50)
+  authority String @db.VarChar(50)
+  users     users  @relation(fields: [username], references: [username], onDelete: NoAction, onUpdate: NoAction, map: "authorities_users_username_fk")
+}
+
+model comment {
+  id         Int       @id @default(autoincrement())
+  body       String    @db.Text
+  user_id    Int
+  post_date  DateTime? @db.Date
+  anime_id   Int?
+  article_id Int?      @db.SmallInt
+  list_id    Int?
+}
+
+model genre {
+  id        Int         @id @default(autoincrement())
+  name      String?     @unique(map: "name_UNIQUE") @db.VarChar(512)
+  has_genre has_genre[]
+}
+
+model has_genre {
+  id       Int    @id @default(autoincrement())
+  id_anime Int?
+  id_genre Int?
+  anime    anime? @relation(fields: [id_anime], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "id")
+  genre    genre? @relation(fields: [id_genre], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "id_genre")
+
+  @@index([id_anime], map: "id_anime_idx")
+  @@index([id_genre], map: "id_genre_idx")
+}
+
+model has_producer {
+  id          Int       @id @default(autoincrement())
+  id_anime    Int?
+  id_producer Int?
+  anime       anime?    @relation(fields: [id_anime], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "id_anime_has_producer")
+  producer    producer? @relation(fields: [id_producer], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "id_producer_has_producer")
+
+  @@index([id_anime], map: "id_idx")
+  @@index([id_producer], map: "id_idx1")
+}
+
+model has_studio {
+  id        Int     @id @default(autoincrement())
+  id_anime  Int?
+  id_studio Int?
+  anime     anime?  @relation(fields: [id_anime], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "has_anime_key")
+  studio    studio? @relation(fields: [id_studio], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "has_studio_key")
+
+  @@index([id_anime], map: "has_anime_key_idx")
+  @@index([id_studio], map: "has_studio_key_idx")
+}
+
+model imagesuploaded {
+  id      Int       @id @unique(map: "Image_id_uindex") @default(autoincrement())
+  content Bytes     @db.Blob
+  name    String    @db.VarChar(128)
+  article article[]
+}
+
+model islistedin {
+  id       Int   @id @default(autoincrement())
+  list_id  Int
+  anime_id Int
+  anime    anime @relation(fields: [anime_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "isListedIn_Anime_FK")
+
+  @@index([anime_id], map: "isListedIn_Anime_FK")
+}
+
+model list {
+  id          Int       @id @default(autoincrement())
+  name        String    @db.VarChar(128)
+  date        DateTime? @db.Date
+  description String?   @db.VarChar(2056)
+  is_owned_by Int
+  is_default  Int?      @default(0) @db.SmallInt
+  users       users     @relation(fields: [is_owned_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "list_users_id_fk")
+
+  @@index([is_owned_by], map: "list_users_id_fk")
+}
+
+model malanime {
+  malid         Int     @id @default(autoincrement())
+  aired         String? @db.VarChar(512)
+  airing        String? @db.VarChar(45)
+  episodes      String? @db.VarChar(45)
+  genres        String? @db.VarChar(2048)
+  image_url     String? @db.VarChar(128)
+  producers     String? @db.VarChar(2048)
+  rating        String? @db.VarChar(45)
+  studios       String? @db.VarChar(1024)
+  synopsis      String? @db.Text
+  title         String? @db.VarChar(512)
+  title_english String? @db.VarChar(512)
+}
+
+model pegi {
+  id    Int     @id @default(autoincrement())
+  pegi  String? @unique(map: "pegi_UNIQUE") @db.VarChar(1024)
+  anime anime[]
+}
+
+model producer {
+  id           Int            @id @default(autoincrement())
+  name         String?        @unique(map: "name_UNIQUE") @db.VarChar(512)
+  has_producer has_producer[]
+}
+
+model rating {
+  user_id  Int
+  anime_id Int
+  rate     Float?
+  anime    anime  @relation(fields: [anime_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "rating_anime_id_fk")
+  users    users  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "rating_users_id_fk")
+
+  @@id([anime_id, user_id])
+  @@index([user_id], map: "rating_users_id_fk")
+}
+
+model studio {
+  id         Int          @id @default(autoincrement())
+  name       String?      @unique(map: "name_UNIQUE") @db.VarChar(512)
+  has_studio has_studio[]
+}
+
+model token {
+  tokenid         Int       @id @default(autoincrement())
+  token           String?   @db.VarChar(64)
+  expiration_date DateTime? @db.DateTime(0)
+  user_id         Int?
+}
+
+model users {
+  id          Int          @id @default(autoincrement())
+  username    String       @unique(map: "users_username_uindex") @db.VarChar(64)
+  password    String       @db.VarChar(64)
+  enabled     Boolean?     @default(true)
+  firstname   String       @db.VarChar(64)
+  lastname    String       @db.VarChar(64)
+  email       String       @db.VarChar(64)
+  gender      String?      @db.VarChar(1)
+  bio         String?      @db.Text
+  image_id    Int
+  ip          String       @db.VarChar(64)
+  authorities authorities?
+  list        list[]
+  rating      rating[]
+}
